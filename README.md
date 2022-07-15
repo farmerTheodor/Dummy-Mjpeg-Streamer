@@ -2,27 +2,13 @@
 A server and a client in python for mjpeg streams for testing
 
 # You will need
-For the test server:
-
-     sudo apt-get install gstreamer-tools
-
-Python lib for the example viewer
-(I had them already in my machine so it may need more work than this commands)
-
-     sudo pip install cv2
-     sudo pip install numpy
+Docker: https://docs.docker.com/engine/install/
 
 
 # Run the server
 One terminal:
 
-    python mjpeg_test_server.py
-
-Note: sometimes it hangs when you Control+C it, just kill it, you can do Control+Z (send to background) and `kill -9 %%` (kill background process).
-
-Another terminal:
-
-    gst-launch videotestsrc pattern=ball ! video/x-raw-rgb, framerate=15/1, width=640, height=480 !  jpegenc ! multipartmux boundary=spionisto ! tcpclientsink port=9999
+    docker-compose up -d
 
 # Run the viewer
 
