@@ -6,12 +6,12 @@
 # Run this script and then launch the following pipeline:
 # gst-launch videotestsrc pattern=ball ! video/x-raw-rgb, framerate=15/1, width=640, height=480 !  jpegenc ! multipartmux boundary=spionisto ! tcpclientsink port=9999
 
-from Queue import Queue
+from queue import Queue
 from threading import Thread
 from socket import socket
 from select import select
 from wsgiref.simple_server import WSGIServer, make_server, WSGIRequestHandler
-from SocketServer import ThreadingMixIn
+from socketserver import ThreadingMixIn
 
 
 class MyWSGIServer(ThreadingMixIn, WSGIServer):
@@ -28,7 +28,7 @@ INDEX_PAGE = """
 </head>
 <body>
 <h1>Testing a dummy camera with GStreamer</h1>
-<img src="/mjpeg_stream"/>
+<img src="/stream"/>
 <hr />
 </body>
 </html>
@@ -54,15 +54,15 @@ class IPCameraApp(object):
                 ("Content-Type", "text/html"),
                 ("Content-Length", str(len(INDEX_PAGE)))
             ])
-            return iter([INDEX_PAGE])
-        elif environ['PATH_INFO'] == '/mjpeg_stream':
+            return iter([str.encode(INDEX_PAGE)])
+        elif environ['PATH_INFO'] == '/stream':
             return self.stream(start_response)
         else:
             start_response("404 Not Found", [
                 ("Content-Type", "text/html"),
                 ("Content-Length", str(len(ERROR_404)))
             ])
-            return iter([ERROR_404])
+            return iter([str.encode(ERROR_404)])
 
     def stream(self, start_response):
         start_response('200 OK', [('Content-type', 'multipart/x-mixed-replace; boundary=--spionisto')])
@@ -82,9 +82,9 @@ def input_loop(app):
     sock.bind(('', 9999))
     sock.listen(1)
     while True:
-        print 'Waiting for input stream'
+        print('Waiting for input stream')
         sd, addr = sock.accept()
-        print 'Accepted input stream from', addr
+        print('Accepted input stream from', addr)
         data = True
         while data:
             readable = select([sd], [], [], 0.1)[0]
@@ -94,24 +94,24 @@ def input_loop(app):
                     break
                 for q in app.queues:
                     q.put(data)
-        print 'Lost input stream from', addr
+        print('Lost input stream from', addr)
 
 if __name__ == '__main__':
 
     #Launch an instance of wsgi server
     app = IPCameraApp()
     port = 1337
-    print 'Launching camera server on port', port
+    print('Launching camera server on port', port)
     httpd = create_server('', port, app)
 
-    print 'Launch input stream thread'
+    print('Launch input stream thread')
     t1 = Thread(target=input_loop, args=[app])
     t1.setDaemon(True)
     t1.start()
 
     try:
-        print 'Httpd serve forever'
+        print('Httpd serve forever')
         httpd.serve_forever()
     except KeyboardInterrupt:
         httpd.kill()
-        print "Shutdown camera server ..."
+        print("Shutdown camera server ...")

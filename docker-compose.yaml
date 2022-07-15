@@ -1,0 +1,25 @@
+version: '3'
+
+networks:
+  mjpeg_network:
+    driver: bridge
+
+services:
+  dummy_mjepg_stream:
+    container_name: dummy_mjepg_stream
+    build:
+      context: .
+      dockerfile: Dockerfile-mjpeg-stream
+    ports:
+      - "1337:1337"
+    networks:
+      - mjpeg_network
+  gstreamer:
+    container_name: gstreamer
+    depends_on:
+      - dummy_mjepg_stream
+    build:
+      context: .
+      dockerfile: Dockerfile-gstreamer
+    networks:
+      - mjpeg_network
